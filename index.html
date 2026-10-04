@@ -16,21 +16,31 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <link rel="stylesheet" href="src/styles.css" />
+    <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script type="module" src="src/main.js"></script>
   </head>
   <body>
+    <a class="skip-link" href="#catalogo">Saltar al catálogo</a>
     <header class="site-header">
       <a class="wordmark" href="#inicio" aria-label="AdopMe, inicio">
         <img class="wordmark-mark" src="src/adopme-mark.svg" alt="" />AdopMe<span class="wordmark-period">.</span>
       </a>
-      <nav class="main-nav" aria-label="Navegación principal">
+      <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menú">
+        <span class="nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+      <nav class="main-nav" id="main-nav" aria-label="Navegación principal">
         <a href="#catalogo">Mascotas</a>
         <a href="#proceso">Cómo funciona</a>
         <button class="nav-action" type="button" data-open-requests>Mis solicitudes</button>
         <button class="nav-action" type="button" data-open-refuge>Panel refugios</button>
       </nav>
       <div class="header-actions">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Cambiar modo de color">
+          <span class="theme-toggle-icon" aria-hidden="true">☼</span>
+          <span class="theme-toggle-text">Oscuro</span>
+        </button>
         <button class="auth-trigger" id="auth-trigger" type="button">Iniciar sesión</button>
         <a class="header-cta" href="#catalogo">Encontrar compañero <span aria-hidden="true">↗</span></a>
       </div>
@@ -48,10 +58,41 @@
           <p class="eyebrow"><span class="eyebrow-dot"></span> Adopta cerca de ti</p>
           <h1 id="hero-title">Un hogar<br />cambia <em>todo.</em></h1>
           <p class="hero-copy">Hay alguien esperando conocerte. Encuentra a tu compañero de vida entre quienes buscan una segunda oportunidad.</p>
-          <a class="hero-button" href="#catalogo">Conoce a las mascotas <span aria-hidden="true">↓</span></a>
+          <div class="hero-actions">
+            <a class="hero-button" href="#catalogo">Conoce a las mascotas <span aria-hidden="true">↓</span></a>
+            <button class="hero-button hero-button-secondary" type="button" data-open-quiz>Descubre tu match <span aria-hidden="true">↗</span></button>
+          </div>
         </div>
         <div class="hero-note"><span class="hero-note-number" id="pet-count">6</span><span>amigos listos<br />para conocerte</span></div>
         <span class="hero-caption">Pequeños encuentros, grandes historias.</span>
+      </section>
+
+      <section class="impact section-wrap reveal" aria-label="Estadísticas de AdopMe">
+        <div class="impact-grid">
+          <article class="impact-card">
+            <span class="impact-value" id="stats-available">0</span>
+            <span class="impact-label">Mascotas listas</span>
+          </article>
+          <article class="impact-card">
+            <span class="impact-value" id="stats-requests">0</span>
+            <span class="impact-label">Solicitudes</span>
+          </article>
+          <article class="impact-card">
+            <span class="impact-value" id="stats-families">0</span>
+            <span class="impact-label">Familias felices</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="recommendations section-wrap reveal" id="recomendaciones" aria-labelledby="recommendations-title">
+        <div class="catalog-heading">
+          <div>
+            <p class="eyebrow eyebrow-dark">Elegidos para ti</p>
+            <h2 id="recommendations-title">Tu <em>match</em> ideal</h2>
+          </div>
+          <p class="catalog-intro">Descubre quienes encajan mejor con tu estilo de vida.</p>
+        </div>
+        <div class="recommendation-grid" id="recommendation-grid"></div>
       </section>
 
       <section class="catalog section-wrap" id="catalogo" aria-labelledby="catalog-title">
@@ -76,6 +117,17 @@
             <button class="filter-button" type="button" data-category="Gatos" aria-pressed="false">Gatos</button>
             <button class="filter-button" type="button" data-category="Otros" aria-pressed="false">Otros</button>
           </div>
+
+          <div class="facet-group" role="group" aria-label="Filtrar por edad">
+            <span class="facet-label">Edad</span>
+            <div class="facet-chips" id="age-filters"></div>
+          </div>
+
+          <div class="facet-group" role="group" aria-label="Filtrar por tamaño">
+            <span class="facet-label">Tamaño</span>
+            <div class="facet-chips" id="size-filters"></div>
+          </div>
+
           <button class="saved-filter" id="saved-filter" type="button" aria-pressed="false"><span aria-hidden="true">♡</span> Favoritos <span id="saved-count">0</span></button>
         </div>
 
@@ -89,6 +141,20 @@
         </div>
       </section>
 
+      <section class="refuges section-wrap reveal" id="refugios" aria-labelledby="refuges-title">
+        <div class="catalog-heading">
+          <div>
+            <p class="eyebrow eyebrow-dark">Encuentra ayuda cerca</p>
+            <h2 id="refuges-title">Refugios en <em>Morelia.</em></h2>
+          </div>
+          <p class="catalog-intro">Conoce centros de adopción en Morelia, Michoacán y descubre dónde empezar tu historia.</p>
+        </div>
+        <div class="refuge-map-layout">
+          <div class="refuge-map" id="refuge-map" aria-label="Mapa de refugios cercanos"></div>
+          <div class="refuge-list" id="refuge-list"></div>
+        </div>
+      </section>
+
       <section class="process section-wrap" id="proceso" aria-labelledby="process-title">
         <div class="process-heading reveal">
           <p class="eyebrow eyebrow-dark">Un proceso pensado para ambos</p>
@@ -98,6 +164,54 @@
           <article class="process-step reveal"><span class="step-number">01</span><h3>Encuentra</h3><p>Conoce sus historias y elige con quién sientes esa conexión especial.</p></article>
           <article class="process-step reveal"><span class="step-number">02</span><h3>Conversemos</h3><p>Cuéntanos de ti. Nos pondremos en contacto para conocernos mejor.</p></article>
           <article class="process-step reveal"><span class="step-number">03</span><h3>Bienvenido a casa</h3><p>Te acompañamos para que la llegada a casa sea feliz y tranquila.</p></article>
+        </div>
+      </section>
+
+      <section class="stories section-wrap" aria-labelledby="stories-title">
+        <div class="stories-heading reveal">
+          <p class="eyebrow eyebrow-dark">Historias que abren camino</p>
+          <h2 id="stories-title">Familias que<br /><em>encontraron hogar.</em></h2>
+        </div>
+
+        <div class="stories-grid">
+          <article class="story-card reveal">
+            <div class="story-portrait">
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=700&q=85" alt="Persona sonriente con su nueva mascota" />
+            </div>
+            <div class="story-body">
+              <p class="story-quote">“No imaginaba que una adopción pudiera cambiar tanto mi rutina. Luna llegó a casa y de inmediato se convirtió en parte de nuestra familia.”</p>
+              <div class="story-meta">
+                <strong>María &amp; Luna</strong>
+                <span>Adoptaron a Luna</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="story-card reveal">
+            <div class="story-portrait">
+              <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=85" alt="Familia feliz con un perro" />
+            </div>
+            <div class="story-body">
+              <p class="story-quote">“El proceso fue claro, cercano y muy humano. Bruno no solo nos dio compañía, sino también mucha alegría y equilibrio en casa.”</p>
+              <div class="story-meta">
+                <strong>Diego &amp; Bruno</strong>
+                <span>Adoptaron a Bruno</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="story-card reveal">
+            <div class="story-portrait">
+              <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=700&q=85" alt="Persona con un gato en brazos" />
+            </div>
+            <div class="story-body">
+              <p class="story-quote">“Milo nos encontró en el momento perfecto. Fue como si siempre hubiera estado esperándonos para llenar la casa de amor.”</p>
+              <div class="story-meta">
+                <strong>Valeria &amp; Milo</strong>
+                <span>Adoptaron a Milo</span>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
     </main>
@@ -114,6 +228,65 @@
 
     <div class="auth-toast" id="auth-toast" role="status" aria-live="polite"></div>
 
+    <dialog class="quiz-dialog" id="compatibility-dialog" aria-labelledby="quiz-title">
+      <button class="dialog-close" id="quiz-close" type="button" aria-label="Cerrar">×</button>
+      <div id="quiz-form-view">
+        <p class="eyebrow eyebrow-dark">Un match con intención</p>
+        <h2 id="quiz-title">¿Qué compañero encaja contigo?</h2>
+        <p class="dialog-intro">Responde cuatro preguntas y ajustaremos las recomendaciones a tu estilo de vida.</p>
+        <form id="compatibility-form" class="compatibility-form">
+          <label>¿Dónde vives?
+            <select name="hogar" required><option value="">Selecciona una opción</option><option value="departamento">Departamento</option><option value="casa">Casa</option><option value="casa-jardin">Casa con jardín</option></select>
+          </label>
+          <label>¿Cuánto tiempo tienes cada día?
+            <select name="tiempo" required><option value="">Selecciona una opción</option><option value="poco">Poco tiempo</option><option value="medio">Varias horas</option><option value="mucho">Mucho tiempo</option></select>
+          </label>
+          <label>¿Cuál es tu experiencia?
+            <select name="experiencia" required><option value="">Selecciona una opción</option><option value="primera">Sería mi primera mascota</option><option value="algo">He convivido antes</option><option value="mucha">Tengo mucha experiencia</option></select>
+          </label>
+          <label>¿Qué te gustaría conocer?
+            <select name="preferencia" required><option value="">Selecciona una opción</option><option value="indistinto">Me es indistinto</option><option value="perro">Perro</option><option value="gato">Gato</option></select>
+          </label>
+          <button class="submit-button" type="submit">Ver mis matches <span aria-hidden="true">↗</span></button>
+        </form>
+      </div>
+      <div id="quiz-result" hidden>
+        <p class="eyebrow eyebrow-dark">Tu resultado</p>
+        <h2>Estos compañeros podrían encajar contigo.</h2>
+        <div class="quiz-result-list" id="quiz-result-list"></div>
+        <button class="back-button" id="quiz-retry" type="button">Repetir test</button>
+      </div>
+    </dialog>
+
+    <dialog class="pet-detail-dialog" id="pet-detail-dialog" aria-labelledby="pet-detail-title">
+      <button class="dialog-close" id="pet-detail-close" type="button" aria-label="Cerrar">×</button>
+      <div class="pet-detail-layout">
+        <div class="pet-detail-visual">
+          <img id="pet-detail-image" src="" alt="" />
+        </div>
+        <div class="pet-detail-content">
+          <p class="eyebrow eyebrow-dark">Mascota disponible</p>
+          <div class="pet-detail-heading">
+            <div>
+              <h2 id="pet-detail-title">Mascota</h2>
+              <p id="pet-detail-breed" class="pet-detail-breed"></p>
+            </div>
+            <span id="pet-detail-status" class="status-chip">Disponible</span>
+          </div>
+          <div class="pet-detail-tags" id="pet-detail-tags"></div>
+          <p id="pet-detail-description" class="pet-detail-description"></p>
+          <div class="pet-detail-meta">
+            <div><span>Edad</span><strong id="pet-detail-age"></strong></div>
+            <div><span>Especie</span><strong id="pet-detail-species"></strong></div>
+          </div>
+          <div class="pet-detail-actions">
+            <button class="back-button" id="pet-detail-favorite" type="button">Guardar en favoritos</button>
+            <button class="submit-button" id="pet-detail-adopt" type="button">Me gustaría conocerle <span aria-hidden="true">↗</span></button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
     <dialog class="auth-dialog" id="auth-dialog" aria-labelledby="auth-title">
       <button class="dialog-close" id="auth-close" type="button" aria-label="Cerrar">×</button>
       <div class="auth-visual">
@@ -125,14 +298,15 @@
         <h2 id="auth-title">Qué gusto verte.</h2>
         <p class="auth-intro" id="auth-intro">Entra para guardar tus favoritos y seguir tus solicitudes.</p>
         <form class="auth-form" id="login-form">
-          <label>Correo electrónico<input name="correo" type="email" autocomplete="email" required maxlength="120" placeholder="tu@correo.com" /></label>
-          <label>Contraseña<input name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Al menos 8 caracteres" /></label>
+          <label>Correo electrónico<input name="correo" type="email" autocomplete="email" required maxlength="120" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" title="Escribe un correo válido, por ejemplo: tu@correo.com" placeholder="tu@correo.com" /></label>
+          <label>Contraseña<input name="password" type="password" autocomplete="current-password" required minlength="8" title="La contraseña debe tener al menos 8 caracteres." placeholder="Al menos 8 caracteres" /></label>
+          <p class="auth-switch"><button id="forgot-password" type="button">¿Olvidaste tu contraseña?</button></p>
           <button class="submit-button" type="submit">Iniciar sesión <span aria-hidden="true">↗</span></button>
         </form>
         <form class="auth-form" id="register-form" hidden>
-          <label>Tu nombre<input name="nombre" type="text" autocomplete="name" required maxlength="80" placeholder="Nombre y apellido" /></label>
-          <label>Correo electrónico<input name="correo" type="email" autocomplete="email" required maxlength="120" placeholder="tu@correo.com" /></label>
-          <label>Contraseña<input name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="Al menos 8 caracteres" /></label>
+          <label>Tu nombre<input name="nombre" type="text" autocomplete="name" required minlength="2" maxlength="80" placeholder="Nombre y apellido" /></label>
+          <label>Correo electrónico<input name="correo" type="email" autocomplete="email" required maxlength="120" pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$" title="Escribe un correo válido, por ejemplo: tu@correo.com" placeholder="tu@correo.com" /></label>
+          <label>Contraseña<input name="password" type="password" autocomplete="new-password" required minlength="8" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$" title="Debe incluir mayúsculas, minúsculas y números." placeholder="Al menos 8 caracteres" /></label>
           <button class="submit-button" type="submit">Crear cuenta <span aria-hidden="true">↗</span></button>
         </form>
         <p class="auth-feedback" id="auth-feedback" role="status" aria-live="polite"></p>
@@ -239,8 +413,9 @@
           </div>
           <div class="form-row">
             <label>Edad<input name="edad" required maxlength="40" placeholder="2 años" /></label>
-            <label>Foto (URL)<input name="foto" type="url" required placeholder="https://..." /></label>
+            <label>Foto (URL https)<input name="foto" type="url" placeholder="https://..." /></label>
           </div>
+          <label>o archivo JPEG, PNG o WebP <span class="optional-label">máx. 2 MB, con Firebase</span><input name="fotoArchivo" type="file" accept="image/jpeg,image/png,image/webp" /></label>
           <label>Descripción<textarea name="descripcion" required maxlength="240" rows="2" placeholder="Personalidad y lo que busca en su hogar"></textarea></label>
           <button class="submit-button" type="submit">Publicar mascota <span aria-hidden="true">↗</span></button>
           <p class="panel-feedback" id="pet-form-feedback" role="status" aria-live="polite"></p>

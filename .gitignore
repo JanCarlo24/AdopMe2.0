@@ -1,0 +1,13 @@
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+.DS_Store
+*.log
+.env
+.env.*
+.firebase/
+.emulator-data/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

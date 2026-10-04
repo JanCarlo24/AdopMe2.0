@@ -1,0 +1,143 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function validProfile(data) {
+      return data.keys().hasOnly(['nombre', 'correo', 'creado'])
+        && data.nombre is string
+        && data.nombre.size() >= 2
+        && data.nombre.size() <= 80
+        && data.correo is string
+        && data.correo.size() <= 120
+        && data.correo.matches('.+@.+\\..+')
+        && data.creado is string
+        && data.creado.size() > 10
+        && data.creado.size() < 40;
+    }
+
+    function validQuiz(data) {
+      return data.keys().hasOnly(['hogar', 'tiempo', 'experiencia', 'preferencia'])
+        && data.hogar in ['departamento', 'casa', 'casa-jardin']
+        && data.tiempo in ['poco', 'medio', 'mucho']
+        && data.experiencia in ['primera', 'algo', 'mucha']
+        && data.preferencia in ['indistinto', 'perro', 'gato'];
+    }
+
+    function validPet(data) {
+      return data.keys().hasOnly(['nombre', 'especie', 'raza', 'edad', 'categoria', 'foto', 'descripcion', 'estado', 'ownerUid', 'edadGrupo', 'tamano', 'creado'])
+        && data.nombre is string && data.nombre.size() > 0 && data.nombre.size() <= 60
+        && data.especie in ['Perro', 'Gato', 'Otro']
+        && data.raza is string && data.raza.size() > 0 && data.raza.size() <= 80
+        && data.edad is string && data.edad.size() > 0 && data.edad.size() <= 40
+        && data.categoria in ['Perros', 'Gatos', 'Otros']
+        && data.foto is string && data.foto.size() < 2048 && data.foto.matches('^https://.+')
+        && data.descripcion is string && data.descripcion.size() > 0 && data.descripcion.size() <= 240
+        && data.estado in ['Disponible', 'En proceso', 'Adoptado']
+        && data.ownerUid is string && data.ownerUid.size() > 0 && data.ownerUid.size() < 128
+        && data.creado is string && data.creado.size() > 10 && data.creado.size() < 40
+        && (!('edadGrupo' in data) || (data.edadGrupo in ['Cachorro', 'Adulto', 'Senior']))
+        && (!('tamano' in data) || (data.tamano in ['Pequeño', 'Mediano', 'Grande']));
+    }
+
+    function petIsPublic(data) {
+      return data.estado == 'Disponible' || data.estado == 'En proceso';
+    }
+
+    function validAdoption(data) {
+      return data.keys().hasOnly(['solicitudId', 'ownerUid', 'cuentaCorreo', 'mascotaId', 'mascotaNombre', 'nombreAdoptante', 'correo', 'telefono', 'tipoVivienda', 'otrasMascotas', 'experiencia', 'mensaje', 'consentimiento', 'estadoSolicitud', 'fecha', 'actualizado'])
+        && data.solicitudId is string && data.solicitudId.size() > 0 && data.solicitudId.size() < 80
+        && data.ownerUid is string && data.ownerUid.size() > 0 && data.ownerUid.size() < 128
+        && data.cuentaCorreo is string && data.cuentaCorreo.size() <= 120
+        && data.correo == data.cuentaCorreo
+        && data.mascotaId is string && data.mascotaId.size() > 0 && data.mascotaId.size() < 80
+        && data.mascotaNombre is string && data.mascotaNombre.size() <= 60
+        && data.nombreAdoptante is string && data.nombreAdoptante.size() >= 2 && data.nombreAdoptante.size() <= 80
+        && data.telefono is string && data.telefono.size() > 0 && data.telefono.size() <= 30
+        && data.tipoVivienda in ['Casa', 'Departamento', 'Otro']
+        && data.otrasMascotas in ['No', 'Sí, perros', 'Sí, gatos', 'Sí, otras']
+        && data.experiencia in ['Sí, actualmente', 'Sí, anteriormente', 'Sería mi primera vez']
+        && data.mensaje is string && data.mensaje.size() <= 500
+        && data.consentimiento == true
+        && data.estadoSolicitud in ['Recibida', 'En revisión', 'Visita pendiente', 'Aprobada', 'No aprobada', 'Adopción completada']
+        && data.fecha is string && data.fecha.size() > 10 && data.fecha.size() < 40
+        && (!('actualizado' in data) || (data.actualizado is string && data.actualizado.size() > 10 && data.actualizado.size() < 40));
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && validProfile(request.resource.data);
+      allow update: if isOwner(uid)
+        && validProfile(request.resource.data)
+        && request.resource.data.correo == resource.data.correo
+        && request.resource.data.creado == resource.data.creado;
+      allow delete: if false;
+
+      match /favorites/{docId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && docId == 'ids'
+          && request.resource.data.keys().hasOnly(['ids'])
+          && request.resource.data.ids is list
+          && request.resource.data.ids.size() <= 200;
+        allow delete: if false;
+      }
+
+      match /compatibility/{docId} {
+        allow read: if isOwner(uid);
+        allow create, update: if isOwner(uid) && docId == 'result' && validQuiz(request.resource.data);
+        allow delete: if false;
+      }
+    }
+
+    match /admins/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    match /pets/{petId} {
+      allow read: if petIsPublic(resource.data)
+        || isAdmin()
+        || (signedIn() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isAdmin()
+        && validPet(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.estado == 'Disponible';
+      allow update: if isAdmin()
+        && validPet(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.creado == resource.data.creado
+        && request.resource.data.nombre == resource.data.nombre;
+      allow delete: if isAdmin();
+    }
+
+    match /adoptions/{id} {
+      allow read: if signedIn() && (resource.data.ownerUid == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && validAdoption(request.resource.data)
+        && request.resource.data.solicitudId == id
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.cuentaCorreo == request.auth.token.email
+        && request.resource.data.estadoSolicitud == 'Recibida'
+        && !('actualizado' in request.resource.data);
+      allow update: if isAdmin()
+        && validAdoption(request.resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.solicitudId == resource.data.solicitudId
+        && request.resource.data.fecha == resource.data.fecha
+        && request.resource.data.cuentaCorreo == resource.data.cuentaCorreo
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estadoSolicitud', 'actualizado']);
+      allow delete: if false;
+    }
+  }
+}
